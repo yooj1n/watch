@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 const Image = styled.Image`
-  width: 104px;
+  width: 100px;
   height: 160px;
   border-radius: 8px;
   background-color: black;

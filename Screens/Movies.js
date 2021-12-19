@@ -1,9 +1,17 @@
 import React, { useEffect, useState } from "react";
+import { ActivityIndicator, TouchableOpacity } from "react-native";
 import styled from "styled-components/native";
-import { Poster } from "./Poster";
+import { Poster } from "../Poster";
 import StarRating from 'react-native-star-rating';
+import { useQuery } from "react-query";
+import { nowPlaying, popular, topRated, upcoming } from "../api";
 
-const API_KEY = "0a5c0d8acd8423f2bb24153b5937e1c7"
+
+const Loader = styled.View`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+`;
 
 const Container = styled.ScrollView`
   margin-top: 63px;
@@ -24,7 +32,7 @@ const NowPScroll = styled.ScrollView`
     margin-top: 16px;
 `
 
-const Movie = styled.View`
+const Movie = styled.TouchableOpacity`
   margin-right: 17px;
   align-items: center;
 `;
@@ -47,66 +55,45 @@ width: 100%;
 margin-left: 16px;
 `
 
-const Coming = styled.View`
+const VWrap = styled.TouchableOpacity`
   flex-direction: row;
   margin-top: 16px;
 `;
 
 const Date = styled.Text`
 position: absolute;
+font-size: 10px;
 bottom: 5px;
 right: 20px;
 color: #9A9A9A;
 `
 
 
-const Movies = () => {
-  const [nowPlaying, setNowPlaying] = useState([]);
-  const [upcoming, setUpcoming] = useState([]);
-  const [popular, setPopular] = useState([]);
-  const [topRated, setTopRated] = useState([]);
+const Movies = ({navigation : {navigate}}) => {
+  const { isLoading: nowPlayingLoading, data: nowPlayingData } = useQuery(
+    "nowPlaying",
+    nowPlaying
+  );
+  const { isLoading: upcomingLoading, data: upcomingData } = useQuery(
+    "upcoming",
+    upcoming
+  );
+  const { isLoading: popularLoading, data: popularData } = useQuery(
+    "popular",
+    popular
+  );
+  const { isLoading: topRatedLoading, data: topRatedData } = useQuery(
+    "topRated",
+    topRated
+  );
 
-  const getNowPlaying = async () => {
-    const { results } = await (
-      await fetch(
-        `https://api.themoviedb.org/3/movie/now_playing?api_key=${API_KEY}&language=en-US&page=1`
-      )
-    ).json();
-    setNowPlaying(results);
-  };
-  const getUpcoming = async () => {
-    const { results } = await (
-      await fetch(
-        `https://api.themoviedb.org/3/movie/upcoming?api_key=${API_KEY}&language=en-US&page=1`
-      )
-    ).json();
-    setUpcoming(results);
-  };
-  const getPopular = async () => {
-    const { results } = await (
-      await fetch(
-        `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=en-US&page=1`
-      )
-    ).json();
-    setPopular(results);
-  };
-  const getTopRated = async () => {
-    const { results } = await (
-      await fetch(
-        `https://api.themoviedb.org/3/movie/top_rated?api_key=${API_KEY}&language=en-US&page=1`
-      )
-    ).json();
-    setTopRated(results);
-  };
+  const loading = nowPlayingLoading || upcomingLoading || popularLoading || topRatedLoading;
 
-  const getData = async () => {
-    await Promise.all([getNowPlaying(), getUpcoming(), getPopular(), getTopRated()]);
-  };
-  useEffect(() => {
-    getData();
-  }, []);
-
-  return (
+  return loading ? (
+    <Loader>
+      <ActivityIndicator />
+    </Loader>
+  ) : (
     <Container>
       <NowPContainer>
         <List>현재 상영중</List>
@@ -114,9 +101,9 @@ const Movies = () => {
           horizontal
           showsHorizontalScrollIndicator={false}
         >
-          {nowPlaying.map(
+          {nowPlayingData.results.map(
             (movie) => (
-            <Movie key={movie.id}>
+            <Movie onPress={() => navigate("Detail")} key={movie.id}>
               <Poster path={movie.poster_path} />
               <Title>
                 {movie.original_title.slice(0, 13)}
@@ -137,8 +124,8 @@ const Movies = () => {
       </NowPContainer>
       <VContainer>
       <List>개봉 예정</List>
-      {upcoming.slice(0,3).map((movie) => (
-      <Coming key={movie.id}>
+      {upcomingData.results.slice(0,3).map((movie) => (
+      <VWrap onPress={() => navigate("Detail")} key={movie.id}>
         <Poster path={movie.poster_path}/>
         <VDescWrap>
             <Title>{movie.original_title}</Title>
@@ -155,12 +142,12 @@ const Movies = () => {
            <Date>
             {movie.release_date}
           </Date>
-      </Coming>))}
+      </VWrap>))}
       </VContainer>
       <VContainer>
       <List>인기</List>
-      {popular.slice(0,3).map((movie) => (
-      <Coming key={movie.id}>
+      {popularData.results.slice(0,3).map((movie) => (
+      <VWrap onPress={() => navigate("Detail")} key={movie.id}>
         <Poster path={movie.poster_path}/>
         <VDescWrap>
             <Title>{movie.original_title}</Title>
@@ -177,12 +164,12 @@ const Movies = () => {
           <Date>
             {movie.release_date}
           </Date>
-      </Coming>))}
+      </VWrap>))}
       </VContainer>
       <VContainer>
       <List>높은 평점</List>
-      {topRated.slice(0,3).map((movie) => (
-      <Coming key={movie.id}>
+      {topRatedData.results.slice(0,3).map((movie) => (
+      <VWrap onPress={() => navigate("Detail")} key={movie.id}>
         <Poster path={movie.poster_path}/>
         <VDescWrap>
             <Title>{movie.original_title}</Title>
@@ -199,7 +186,7 @@ const Movies = () => {
         <Date>
           {movie.release_date}
         </Date>
-      </Coming>))}
+      </VWrap>))}
       </VContainer>
     </Container>
   )
