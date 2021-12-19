@@ -36,11 +36,11 @@ margin-top: 10px;
 margin-bottom: 5px;
 `
 
-const VWrap = styled.View`
+const VContainer = styled.View`
 margin-bottom: 40px;
 `
 
-const ComingWrap = styled.View`
+const VDescWrap = styled.View`
 display: flex;
 flex-direction: column;
 width: 100%;
@@ -52,18 +52,7 @@ const Coming = styled.View`
   margin-top: 16px;
 `;
 
-const ComingDesc = styled.View`
-  flex-direction: column;
-  /* margin-left: 16px; */
-  font-size: 10px;
-`
-
-const Vote = styled.View`
-
-
-`
-
-const Release = styled.Text`
+const Date = styled.Text`
 position: absolute;
 bottom: 5px;
 right: 20px;
@@ -75,6 +64,8 @@ const Movies = () => {
   const [nowPlaying, setNowPlaying] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
   const [popular, setPopular] = useState([]);
+  const [topRated, setTopRated] = useState([]);
+
   const getNowPlaying = async () => {
     const { results } = await (
       await fetch(
@@ -99,11 +90,22 @@ const Movies = () => {
     ).json();
     setPopular(results);
   };
+  const getTopRated = async () => {
+    const { results } = await (
+      await fetch(
+        `https://api.themoviedb.org/3/movie/top_rated?api_key=${API_KEY}&language=en-US&page=1`
+      )
+    ).json();
+    setTopRated(results);
+  };
+
+  const getData = async () => {
+    await Promise.all([getNowPlaying(), getUpcoming(), getPopular(), getTopRated()]);
+  };
   useEffect(() => {
-    getNowPlaying();
-    getUpcoming();
-    getPopular();
+    getData();
   }, []);
+
   return (
     <Container>
       <NowPContainer>
@@ -122,7 +124,7 @@ const Movies = () => {
               </Title>
               <StarRating
                 disabled={true}
-                starSize={9}
+                starSize={10}
                 maxStars={5}
                 rating={movie.vote_average / 2}
                 fullStarColor={'#F1C644'}
@@ -133,58 +135,72 @@ const Movies = () => {
           ))}
         </NowPScroll>
       </NowPContainer>
-      <VWrap>
+      <VContainer>
       <List>개봉 예정</List>
       {upcoming.slice(0,3).map((movie) => (
       <Coming key={movie.id}>
         <Poster path={movie.poster_path}/>
-        <ComingWrap>
-          <ComingDesc>
+        <VDescWrap>
             <Title>{movie.original_title}</Title>
-          </ComingDesc>
-          <Vote>
             <StarRating
               disabled={true}
-              starSize={9}
+              starSize={10}
               maxStars={5}
               rating={movie.vote_average / 2}
               fullStarColor={'#F1C644'}
               emptyStarColor={'#C4C4C4'}
               containerStyle={{width:"15%"}}
             />
-           </Vote>
-           </ComingWrap> 
-          <Release>
-            {new Date(movie.release_date).toISOString().split('T')[0]}
-          </Release>
+           </VDescWrap> 
+           <Date>
+            {movie.release_date}
+          </Date>
       </Coming>))}
-      </VWrap>
-      <VWrap>
+      </VContainer>
+      <VContainer>
       <List>인기</List>
       {popular.slice(0,3).map((movie) => (
       <Coming key={movie.id}>
         <Poster path={movie.poster_path}/>
-        <ComingWrap>
-          <ComingDesc>
+        <VDescWrap>
             <Title>{movie.original_title}</Title>
-          </ComingDesc>
-          <Vote>
             <StarRating
               disabled={true}
-              starSize={9}
+              starSize={10}
               maxStars={5}
               rating={movie.vote_average / 2}
               fullStarColor={'#F1C644'}
               emptyStarColor={'#C4C4C4'}
               containerStyle={{width:"15%"}}
             />
-           </Vote>
-           </ComingWrap> 
-          <Release>
-            {new Date(movie.release_date).toISOString().split('T')[0]}
-          </Release>
+          </VDescWrap> 
+          <Date>
+            {movie.release_date}
+          </Date>
       </Coming>))}
-      </VWrap>
+      </VContainer>
+      <VContainer>
+      <List>높은 평점</List>
+      {topRated.slice(0,3).map((movie) => (
+      <Coming key={movie.id}>
+        <Poster path={movie.poster_path}/>
+        <VDescWrap>
+            <Title>{movie.original_title}</Title>
+            <StarRating
+              disabled={true}
+              starSize={10}
+              maxStars={5}
+              rating={movie.vote_average / 2}
+              fullStarColor={'#F1C644'}
+              emptyStarColor={'#C4C4C4'}
+              containerStyle={{width:"15%"}}
+            />
+        </VDescWrap> 
+        <Date>
+          {movie.release_date}
+        </Date>
+      </Coming>))}
+      </VContainer>
     </Container>
   )
 };
